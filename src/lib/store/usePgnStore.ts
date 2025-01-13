@@ -1,13 +1,32 @@
 import { create } from "zustand";
 
+export interface GameHeaders {
+  [key: string]: string | undefined;
+}
+
 interface PgnStore {
-  positions: Array<{ [key: string]: any }> | null; // Define the shape of the positions array
-  setPositions: (newPositions: Array<{ [key: string]: any }>) => void;
+  positions: Position[] | null;
+  setPositions: (newPositions: Position[]) => void;
+  gameHeaders: GameHeaders | null;
+  setGameHeaders: (newHeaders: GameHeaders | null) => void;
 }
 
 const usePgnStore = create<PgnStore>((set) => ({
   positions: null,
+  gameHeaders: null,
   setPositions: (newPositions) => set({ positions: newPositions }),
+  setGameHeaders: (newHeaders) => set({ gameHeaders: newHeaders }),
 }));
 
 export default usePgnStore;
+
+// interface gameHeaders {
+//   event: string;
+//   site: string;
+//   date: string;
+//   round: string;
+//   white: string;
+//   black: string;
+//   result: string;
+//   rating?: string;
+// }

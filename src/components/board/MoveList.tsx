@@ -1,7 +1,7 @@
 
 export default function MoveList() {
   return (
-    <div className="w-full bg-gray-800 rounded-md p-4 flex flex-col gap-4">
+    <div className="w-full h-full overflow-y-auto bg-gray-800 rounded-md p-4 flex flex-col gap-4">
       <h2 className="text-lg font-bold">Move Classification</h2>
       <ul className="text-sm text-gray-300">
         <li className="flex justify-between">

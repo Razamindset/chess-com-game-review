@@ -1,5 +1,3 @@
-1. Setup router and store.
-2. Make the Landing page look a little better.
 3. Add cached fetched system to improve performance for fetch for now skip the local eval please.
 4. Write algos for all moves except brilliant and great. Will implent those later when we have atlest something to show.
 5. Write local eval engine that gives the same format as the api response.

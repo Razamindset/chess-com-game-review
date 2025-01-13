@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
 import { fenToBoard, isLightSquare, Piece } from "./utils_chess";
+import PlayerInfo from "./PlayerInfo";
+import { FiRefreshCw } from "react-icons/fi";
 
 interface CustomSquare {
   color?: string;
@@ -35,6 +37,18 @@ interface ChessboardProps {
   lastMove?: MoveInfo;
   initialArrows?: Arrow[];
   boardWidth: number;
+  whitePlayer: {
+    name: string;
+    image: string;
+    rating: number;
+    title: string;
+  };
+  blackPlayer: {
+    name: string;
+    image: string;
+    rating: number;
+    title: string;
+  };
 }
 
 const classificationConfig = {
@@ -54,15 +68,17 @@ export default function Chessboard({
   lastMove,
   initialArrows = [],
   boardWidth,
+  whitePlayer,
+  blackPlayer,
 }: ChessboardProps) {
-  const [fen, setFen] = useState(initialFen);
-  const [board, setBoard] = useState<Piece[][]>(fenToBoard(fen));
+  const [board, setBoard] = useState<Piece[][]>(fenToBoard(initialFen));
   const [customSquares, setCustomSquares] = useState<
     Record<string, CustomSquare>
   >({});
   const [error, setError] = useState<string | null>(null);
   const [kingInCheck, setKingInCheck] = useState<Square | null>(null);
   const [arrows] = useState<Arrow[]>(initialArrows);
+  const [isFlipped, setIsFlipped] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
 
@@ -73,7 +89,7 @@ export default function Chessboard({
 
   useEffect(() => {
     drawArrows();
-  }, [arrows]);
+  }, [arrows, isFlipped]);
 
   const getPieceSymbol = (piece: Piece) => {
     const symbols: Record<Piece, string> = {
@@ -95,14 +111,17 @@ export default function Chessboard({
   };
 
   const getSquareStyle = (row: number, col: number) => {
-    const squareName = `${String.fromCharCode(97 + col)}${8 - row}` as Square;
+    const squareName = `${String.fromCharCode(
+      97 + (isFlipped ? 7 - col : col)
+    )}${isFlipped ? row + 1 : 8 - row}` as Square;
     let style: React.CSSProperties = {};
 
     if (customSquares[squareName]?.color) {
       style.backgroundColor = customSquares[squareName].color;
     }
 
-    const bgColor = classificationConfig[lastMove?.classification ?? "good"].color;
+    const bgColor =
+      classificationConfig[lastMove?.classification ?? "good"].color;
 
     if (lastMove && squareName === lastMove.to) {
       style.backgroundColor = bgColor || "#ffff0061";
@@ -112,17 +131,12 @@ export default function Chessboard({
     }
 
     if (kingInCheck === squareName) {
-      style.boxShadow = "inset 0 0 10px rgba(255, 0, 0, 0.6)"; // Red inset shadow with a blur effect
+      style.boxShadow = "inset 0 0 10px rgba(255, 0, 0, 0.6)";
       style.backgroundColor = "red";
     }
 
     return style;
   };
-
-  // const handleFenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setFen(e.target.value);
-  //   setError(null);
-  // };
 
   const loadPosition = (fenToLoad: string) => {
     try {
@@ -131,7 +145,6 @@ export default function Chessboard({
       setCustomSquares({});
       setError(null);
 
-      // Check if the king is in check
       const turn = newChess.turn();
       if (newChess.inCheck()) {
         const kingSquare = newChess
@@ -164,7 +177,6 @@ export default function Chessboard({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const drawSingleArrow = (arrow: Arrow) => {
@@ -190,21 +202,17 @@ export default function Chessboard({
         const endX = (toRect.left + toRect.width / 2 - boardRect.left) * scaleX;
         const endY = (toRect.top + toRect.height / 2 - boardRect.top) * scaleY;
 
-        // Set arrow style
         ctx.strokeStyle = arrow.color;
         ctx.lineWidth = arrow.size * scaleX;
         ctx.lineCap = "square";
 
-        // Calculate the angle and length of the arrow
         const angle = Math.atan2(endY - startY, endX - startX);
 
-        // Draw the arrow line
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.lineTo(endX, endY);
         ctx.stroke();
 
-        // Draw the arrow head
         ctx.beginPath();
         ctx.moveTo(endX, endY - 25);
         ctx.lineTo(
@@ -221,29 +229,36 @@ export default function Chessboard({
       }
     };
 
-    // Draw all permanent arrows
     arrows.forEach(drawSingleArrow);
+  };
+
+  const handleFlipBoard = () => {
+    setIsFlipped(!isFlipped);
   };
 
   return (
     <div
-      className="w-96 mx-auto"
-      style={{
-        userSelect: "none",
-        width: `${boardWidth}px`,
-      }}
+      className="flex flex-col items-center"
+      style={{ width: `${boardWidth}px` }}
     >
+      <PlayerInfo
+        name={isFlipped ? blackPlayer.name : whitePlayer.name}
+        image={isFlipped ? blackPlayer.image : whitePlayer.image}
+        rating={isFlipped ? blackPlayer.rating : whitePlayer.rating}
+        title={isFlipped ? blackPlayer.title : whitePlayer.title}
+        isTop
+      />
       <div className="relative" ref={boardRef}>
         <div className="grid grid-cols-8 gap-0">
-          {board.map((row, rowIndex) =>
-            row.map((piece, colIndex) => {
-              const square = `${String.fromCharCode(97 + colIndex)}${
-                8 - rowIndex
-              }` as Square;
+          {(isFlipped ? [...board].reverse() : board).map((row, rowIndex) =>
+            (isFlipped ? [...row].reverse() : row).map((piece, colIndex) => {
+              const square = `${String.fromCharCode(
+                97 + (isFlipped ? 7 - colIndex : colIndex)
+              )}${isFlipped ? rowIndex + 1 : 8 - rowIndex}` as Square;
               return (
                 <div
                   key={`${rowIndex}-${colIndex}`}
-                  className={`w-12 h-12 flex items-center justify-center text-3xl relative
+                  className={`flex items-center justify-center text-3xl relative
                     ${
                       isLightSquare(rowIndex, colIndex)
                         ? "bg-[#e8c9a9]"
@@ -279,6 +294,15 @@ export default function Chessboard({
             })
           )}
         </div>
+        <button
+          onClick={handleFlipBoard}
+          className="absolute -right-12 top-1/2 transform -translate-y-1/2"
+        >
+          <FiRefreshCw
+            size={25}
+            className="text-gray-400 hover:text-gray-300 hover:scale-110 transition-all"
+          />
+        </button>
         <canvas
           ref={canvasRef}
           className="absolute top-0 left-0 w-full h-full pointer-events-none"
@@ -286,23 +310,13 @@ export default function Chessboard({
           height={512}
         />
       </div>
-
-      {/* <div className="my-4">
-        <input
-          type="text"
-          value={fen}
-          onChange={handleFenChange}
-          className="w-full p-2 border border-gray-300 rounded"
-          placeholder="Enter FEN string"
-        />
-        <button
-          onClick={() => loadPosition(fen)}
-          className="mt-2 w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Load Position
-        </button>
-        {error && <p className="mt-2 text-red-500">{error}</p>}
-      </div> */}
+      <PlayerInfo
+        name={isFlipped ? whitePlayer.name : blackPlayer.name}
+        image={isFlipped ? whitePlayer.image : blackPlayer.image}
+        rating={isFlipped ? whitePlayer.rating : blackPlayer.rating}
+        title={isFlipped ? whitePlayer.title : blackPlayer.title}
+      />
+      {error && <p className="mt-2 text-red-500">{error}</p>}
     </div>
   );
 }
