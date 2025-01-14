@@ -1,67 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Chess, Square } from "chess.js";
-import { fenToBoard, isLightSquare, Piece } from "./utils_chess";
+import { fenToBoard, isLightSquare, Piece } from "./utils";
 import PlayerInfo from "./PlayerInfo";
 import { FiRefreshCw } from "react-icons/fi";
-
-interface CustomSquare {
-  color?: string;
-  emoji?: string;
-}
-
-interface MoveInfo {
-  from: Square;
-  to: Square;
-  classification:
-    | "brilliant"
-    | "great"
-    | "best"
-    | "excellent"
-    | "good"
-    | "inaccuracy"
-    | "mistake"
-    | "blunder"
-    | "book";
-  color?: string;
-}
-
-interface Arrow {
-  from: Square;
-  to: Square;
-  color: string;
-  size: number;
-}
-
-interface ChessboardProps {
-  initialFen: string;
-  lastMove?: MoveInfo;
-  initialArrows?: Arrow[];
-  boardWidth: number;
-  whitePlayer: {
-    name: string;
-    image: string;
-    rating: number;
-    title: string;
-  };
-  blackPlayer: {
-    name: string;
-    image: string;
-    rating: number;
-    title: string;
-  };
-}
-
-const classificationConfig = {
-  brilliant: { emoji: "/src/assets/media/brilliant.png", color: "#1baca6" },
-  great: { emoji: "/src/assets/media/great.png", color: "#5c8bb0" },
-  best: { emoji: "/src/assets/media/best.png", color: "#98bc60" },
-  excellent: { emoji: "/src/assets/media/excellent.png", color: "#98bc60" },
-  good: { emoji: "/src/assets/media/good.png", color: "#98bc60" },
-  inaccuracy: { emoji: "/src/assets/media/inaccuracy.png", color: "#e6912c" },
-  mistake: { emoji: "/src/assets/media/mistake.png", color: "#df5f5f" },
-  blunder: { emoji: "/src/assets/media/blunder.png", color: "#c11c1c" },
-  book: { emoji: "/src/assets/media/book.png", color: "#ffff0061" },
-};
+import { classificationConfig, pieceSymbols } from "../../lib/icons";
 
 export default function Chessboard({
   initialFen,
@@ -92,22 +34,7 @@ export default function Chessboard({
   }, [arrows, isFlipped]);
 
   const getPieceSymbol = (piece: Piece) => {
-    const symbols: Record<Piece, string> = {
-      p: "/src/assets/media/bp.svg",
-      n: "/src/assets/media/bn.svg",
-      b: "/src/assets/media/bb.svg",
-      r: "/src/assets/media/br.svg",
-      q: "/src/assets/media/bq.svg",
-      k: "/src/assets/media/bk.svg",
-      P: "/src/assets/media/wp.svg",
-      N: "/src/assets/media/wn.svg",
-      B: "/src/assets/media/wb.svg",
-      R: "/src/assets/media/wr.svg",
-      Q: "/src/assets/media/wq.svg",
-      K: "/src/assets/media/wk.svg",
-      "": "",
-    };
-    return symbols[piece];
+    return pieceSymbols[piece];
   };
 
   const getSquareStyle = (row: number, col: number) => {

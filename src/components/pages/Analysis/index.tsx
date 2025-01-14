@@ -80,8 +80,7 @@ export default function ChessViewer() {
     setIsAutoPlaying(!isAutoPlaying);
   };
 
-  // Get current move for highlighting
-  const getCurrentMove = () => {
+  const getCurrentMove = (): MoveInfo | null => {
     if (currentIndex === -1 || !positions[currentIndex]) return null;
     return {
       from: positions[currentIndex].from,

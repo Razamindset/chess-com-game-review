@@ -41,3 +41,50 @@ interface Position {
   before: string;
   after: string;
 }
+
+interface CustomSquare {
+  color?: string;
+  emoji?: string;
+}
+
+interface MoveInfo {
+  from: Square;
+  to: Square;
+  classification:
+    | "brilliant"
+    | "great"
+    | "best"
+    | "excellent"
+    | "good"
+    | "inaccuracy"
+    | "mistake"
+    | "blunder"
+    | "book";
+  color?: string;
+}
+
+interface Arrow {
+  from: Square;
+  to: Square;
+  color: string;
+  size: number;
+}
+
+interface ChessboardProps {
+  initialFen: string;
+  lastMove?: MoveInfo | null;
+  initialArrows?: Arrow[];
+  boardWidth: number;
+  whitePlayer: {
+    name: string;
+    image: string;
+    rating: number;
+    title: string;
+  };
+  blackPlayer: {
+    name: string;
+    image: string;
+    rating: number;
+    title: string;
+  };
+}

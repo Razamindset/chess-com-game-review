@@ -1,3 +1,5 @@
+import { appIcons } from "../../lib/icons";
+
 interface PlayerInfoProps {
   name: string;
   image: string;
@@ -20,7 +22,7 @@ export default function PlayerInfo({
       } w-[500px] bg-gray-800 p-2 rounded-md`}
     >
       <img
-        src={image ? image : "/src/assets/icon.png"}
+        src={image ? image : appIcons.mainIcon}
         alt={`${name} avatar`}
         className="w-8 h-8 rounded-full border border-gray-600"
       />

@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Chess } from "chess.js";
 import { useNavigate } from "react-router-dom";
-import usePgnStore from '../../../lib/store/usePgnStore';
-import { ImportModal } from '../../modal';
+import usePgnStore from "../../../lib/store/usePgnStore";
+import { ImportModal } from "../../modal";
+import { appIcons } from "../../../lib/icons";
 
 export default function Home() {
   const { setPositions, setGameHeaders } = usePgnStore();
   const navigate = useNavigate();
-  const [importPlatform, setImportPlatform] = useState<'chess.com' | 'lichess' | null>(null);
+  const [importPlatform, setImportPlatform] = useState<
+    "chess.com" | "lichess" | null
+  >(null);
 
   const samplePgn = `
     [Event "Scholar's Mate"]
@@ -47,10 +50,13 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-start bg-gray-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-8 text-center flex gap-4 items-center">
-        <img src="/src/assets/icon.png" alt="appicon" className="h-12 w-12" />
+        <img src={appIcons.mainIcon} alt="appicon" className="h-12 w-12" />
         Free Game Review
       </h1>
-      <form onSubmit={handleSubmit} className="w-full max-w-4xl flex flex-col gap-4">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-4xl flex flex-col gap-4"
+      >
         <label htmlFor="pgn" className="text-lg font-medium">
           Paste your PGN below:
         </label>
@@ -71,23 +77,23 @@ export default function Home() {
       </form>
       <div className="w-full max-w-4xl mt-8 flex flex-col md:flex-row gap-4">
         <button
-          onClick={() => setImportPlatform('chess.com')}
+          onClick={() => setImportPlatform("chess.com")}
           className="flex-1 flex items-center justify-center px-4 py-3 bg-gray-800 text-white rounded-lg text-xl font-medium hover:bg-gray-700 transition"
         >
           Import from
           <img
-            src="/src/assets/chesscom.png"
+            src={appIcons.ChessComIcon}
             alt="Chess.com"
             className="h-10 ml-4"
           />
         </button>
         <button
-          onClick={() => setImportPlatform('lichess')}
+          onClick={() => setImportPlatform("lichess")}
           className="flex-1 flex items-center justify-center px-4 py-3 bg-gray-800 text-white rounded-lg text-xl font-medium hover:bg-gray-700 transition"
         >
           Import from
           <img
-            src="/src/assets/lichess.svg"
+            src={appIcons.LichessIcon}
             alt="Lichess"
             className="h-10 ml-4 mr-2"
           />
@@ -97,9 +103,8 @@ export default function Home() {
       <ImportModal
         isOpen={!!importPlatform}
         onClose={() => setImportPlatform(null)}
-        platform={importPlatform || 'chess.com'}
+        platform={importPlatform || "chess.com"}
       />
     </div>
   );
 }
-
