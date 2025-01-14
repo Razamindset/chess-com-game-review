@@ -183,10 +183,10 @@ export default function Chessboard({
       style={{ width: `${boardWidth}px` }}
     >
       <PlayerInfo
-        name={isFlipped ? blackPlayer.name : whitePlayer.name}
-        image={isFlipped ? blackPlayer.image : whitePlayer.image}
-        rating={isFlipped ? blackPlayer.rating : whitePlayer.rating}
-        title={isFlipped ? blackPlayer.title : whitePlayer.title}
+        name={isFlipped ? whitePlayer.name : blackPlayer.name}
+        image={isFlipped ? whitePlayer.image : blackPlayer.image}
+        rating={isFlipped ? whitePlayer.rating : blackPlayer.rating}
+        title={isFlipped ? whitePlayer.title : blackPlayer.title}
         isTop
       />
       <div className="relative" ref={boardRef}>
@@ -265,10 +265,10 @@ export default function Chessboard({
         />
       </div>
       <PlayerInfo
-        name={isFlipped ? whitePlayer.name : blackPlayer.name}
-        image={isFlipped ? whitePlayer.image : blackPlayer.image}
-        rating={isFlipped ? whitePlayer.rating : blackPlayer.rating}
-        title={isFlipped ? whitePlayer.title : blackPlayer.title}
+        name={isFlipped ? blackPlayer.name : whitePlayer.name}
+        image={isFlipped ? blackPlayer.image : whitePlayer.image}
+        rating={isFlipped ? blackPlayer.rating : whitePlayer.rating}
+        title={isFlipped ? blackPlayer.title : whitePlayer.title}
       />
       {error && <p className="mt-2 text-red-500">{error}</p>}
     </div>

@@ -42,6 +42,7 @@ interface ApiInitialEval {
   toNumeric: string;
   continuation: Array<any>;
   classification?: classification;
+  accuracy?: number;
 }
 
 interface Position {
@@ -75,22 +76,25 @@ interface Arrow {
   size: number;
 }
 
+interface PlayerInfoProps {
+  name: string;
+  image: string;
+  rating: string;
+  title: string;
+  isTop?: boolean;
+}
+
 interface ChessboardProps {
   initialFen: string;
   lastMove?: MoveInfo | null;
   initialArrows?: Arrow[];
   boardWidth: number;
-  whitePlayer: {
-    name: string;
-    image: string;
-    rating: number;
-    title: string;
-  };
-  blackPlayer: {
-    name: string;
-    image: string;
-    rating: number;
-    title: string;
-  };
+  whitePlayer: PlayerInfoProps;
+  blackPlayer: PlayerInfoProps;
   showArrows: boolean;
+}
+
+interface Accuracy {
+  white: number;
+  black: number;
 }
