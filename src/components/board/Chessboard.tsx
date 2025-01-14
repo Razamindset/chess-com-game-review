@@ -4,6 +4,7 @@ import { fenToBoard, isLightSquare, Piece } from "./utils";
 import PlayerInfo from "./PlayerInfo";
 import { FiRefreshCw } from "react-icons/fi";
 import { classificationConfig, pieceSymbols } from "../../lib/icons";
+import { FaSpinner } from "react-icons/fa";
 
 export default function Chessboard({
   initialFen,
@@ -48,13 +49,14 @@ export default function Chessboard({
     }
 
     const bgColor =
-      classificationConfig[lastMove?.classification ?? "good"].color;
+      (lastMove && classificationConfig[lastMove.classification].color) ||
+      classificationConfig["null"].color;
 
     if (lastMove && squareName === lastMove.to) {
-      style.backgroundColor = bgColor || "#ffff0061";
+      style.backgroundColor = bgColor;
     }
     if (lastMove && squareName === lastMove.from) {
-      style.backgroundColor = bgColor || "#ffff0061";
+      style.backgroundColor = bgColor;
     }
 
     if (kingInCheck === squareName) {
@@ -205,17 +207,30 @@ export default function Chessboard({
                       className="w-full h-full"
                     />
                   )}
-                  {lastMove && lastMove.to === square && (
-                    <img
-                      src={classificationConfig[lastMove.classification]?.emoji}
-                      alt={
-                        lastMove?.to === square
-                          ? lastMove.classification
-                          : "custom"
-                      }
-                      className="absolute -top-3 right-0 w-7 h-7"
-                    />
-                  )}
+                  {lastMove &&
+                    lastMove.classification != "null" &&
+                    lastMove.to === square && (
+                      <img
+                        src={
+                          classificationConfig[
+                            lastMove.classification
+                              ? lastMove.classification
+                              : "null"
+                          ]?.emoji
+                        }
+                        alt={
+                          lastMove && lastMove?.to === square
+                            ? lastMove.classification
+                            : "null"
+                        }
+                        className="absolute -top-3 right-0 w-7 h-7"
+                      />
+                    )}
+                  {lastMove &&
+                    lastMove.classification === "null" &&
+                    lastMove.to === square && (
+                      <FaSpinner className="absolute animate-spin -top-3 right-0 w-7 h-7 bg-green-600 p-1 rounded-full" />
+                    )}
                 </div>
               );
             })

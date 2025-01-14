@@ -11,6 +11,9 @@ import {
   FaPlay,
 } from "react-icons/fa";
 import useChessSounds from "../../../lib/hooks/useSound";
+import { apiInitialEval } from "./evaluation";
+import { Chess } from "chess.js";
+import { classifyMove } from "./classifications";
 
 export default function ChessViewer() {
   const INITIAL_BOARD_FEN =
@@ -23,8 +26,11 @@ export default function ChessViewer() {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [currentFen, setCurrentFen] = useState(INITIAL_BOARD_FEN);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [evaluations, setEvaluations] = useState<ApiInitialEval[]>([
+    apiInitialEval,
+  ]);
+  const [loading, setLoading] = useState(false);
 
-  // Initialize positions when PGN data changes
   useEffect(() => {
     if (parsedPositions?.length) {
       setPositions(parsedPositions);
@@ -33,19 +39,48 @@ export default function ChessViewer() {
   }, [parsedPositions]);
 
   // Auto-play functionality
-  useEffect(() => {
-    let intervalId: any;
-    if (isAutoPlaying) {
-      intervalId = setInterval(() => {
-        if (currentIndex >= positions.length - 1) {
-          setIsAutoPlaying(false);
-          return;
-        }
-        handleNextMove();
-      }, 2000); // 2 second delay between moves
+  // useEffect(() => {
+  //   let intervalId: any;
+  //   if (isAutoPlaying) {
+  //     intervalId = setInterval(() => {
+  //       if (loading) return;
+  //       if (currentIndex >= positions.length - 1) {
+  //         setIsAutoPlaying(false);
+  //         return;
+  //       }
+  //       handleNextMove();
+  //     }, 1000); // 2 second delay between moves
+  //   }
+  //   return () => clearInterval(intervalId);
+  // }, [isAutoPlaying, currentIndex, positions]);
+
+  const reviewPostion = async (position: Position, depth = 18) => {
+    const game = new Chess(position.after);
+    const isCheckMate = game.isCheckmate();
+
+    const isDraw = game.isDraw();
+    if (isCheckMate || isDraw) {
+      console.log("Game is over");
+      return {
+        isCheckMate,
+        isDraw,
+      };
     }
-    return () => clearInterval(intervalId);
-  }, [isAutoPlaying, currentIndex, positions]);
+
+    const res = await fetch(`https://chess-api.com/v1`, {
+      method: "POST",
+      body: JSON.stringify({
+        fen: position.after,
+        depth,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer 70901713-134c-484c-9107-47b295663715",
+      },
+      cache: "force-cache",
+    });
+    return res.json();
+  };
 
   // Navigation functions
   const resetToStart = () => {
@@ -59,12 +94,40 @@ export default function ChessViewer() {
     setCurrentFen(positions[positions.length - 1].after);
   };
 
-  const handleNextMove = () => {
+  const handleNextMove = async () => {
     if (!positions.length || currentIndex >= positions.length - 1) return;
     const nextIndex = currentIndex + 1;
     setCurrentIndex(nextIndex);
     setCurrentFen(positions[nextIndex].after);
     handleMoveSounds(positions[nextIndex]);
+
+    setLoading(true);
+
+    const currentEvaluation: ApiInitialEval = await reviewPostion(
+      positions[nextIndex]
+    );
+
+    setEvaluations((prev) => [...prev, currentEvaluation]);
+
+    const prevEvaluation = evaluations[currentIndex + 1];
+
+    const classification = classifyMove(
+      positions[nextIndex],
+      currentEvaluation,
+      prevEvaluation
+    );
+
+    //Update the last evalution with the classification
+    setEvaluations((prev) => {
+      const updatedEvaluations = [...prev];
+      updatedEvaluations[evaluations.length - 1] = {
+        ...updatedEvaluations[evaluations.length - 1],
+        classification,
+      };
+      return updatedEvaluations;
+    });
+    setLoading(false);
+    return;
   };
 
   const handlePreviousMove = () => {
@@ -89,7 +152,7 @@ export default function ChessViewer() {
     return {
       from: positions[currentIndex].from,
       to: positions[currentIndex].to,
-      classification: "best",
+      classification: evaluations[currentIndex].classification || "null",
     };
   };
 
@@ -127,7 +190,7 @@ export default function ChessViewer() {
                     : "bg-gray-700/50 hover:bg-gray-600/50"
                 }`}
                 onClick={resetToStart}
-                disabled={currentIndex === -1}
+                disabled={currentIndex === -1 || loading}
               >
                 <FaFastBackward />
               </button>
@@ -139,7 +202,7 @@ export default function ChessViewer() {
                     : "bg-gray-700/50 hover:bg-gray-600/50"
                 }`}
                 onClick={handlePreviousMove}
-                disabled={currentIndex === -1}
+                disabled={currentIndex === -1 || loading}
               >
                 <FaStepBackward />
               </button>
@@ -147,6 +210,7 @@ export default function ChessViewer() {
               <button
                 className="flex items-center gap-2 px-3 py-2 text-white bg-gray-700/50 rounded-md hover:bg-gray-600/50 transition"
                 onClick={toggleAutoPlay}
+                disabled={true}
               >
                 {isAutoPlaying ? <FaPause /> : <FaPlay />}
               </button>
@@ -159,7 +223,9 @@ export default function ChessViewer() {
                 }`}
                 onClick={handleNextMove}
                 disabled={
-                  !positions.length || currentIndex >= positions.length - 1
+                  !positions.length ||
+                  currentIndex >= positions.length - 1 ||
+                  loading
                 }
               >
                 <FaStepForward />
@@ -187,7 +253,11 @@ export default function ChessViewer() {
           </div>
 
           {/* Uncomment if you want to add the move list */}
-          <MoveList />
+          <MoveList
+            positions={positions}
+            currentIndex={currentIndex}
+            evaluations={evaluations}
+          />
         </div>
       </div>
     </div>

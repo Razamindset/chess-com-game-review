@@ -1,23 +1,24 @@
-
-export default function MoveList() {
+export default function MoveList({
+  positions,
+  currentIndex,
+  evaluations,
+}: {
+  positions: Position[];
+  currentIndex: number;
+  evaluations: ApiInitialEval[];
+}) {
+  if (!positions || !positions.length) return <div>Loading</div>;
   return (
     <div className="w-full h-full overflow-y-auto bg-gray-800 rounded-md p-4 flex flex-col gap-4">
-      <h2 className="text-lg font-bold">Move Classification</h2>
-      <ul className="text-sm text-gray-300">
-        <li className="flex justify-between">
-          <span>1. e4</span>
-          <span>Good Move</span>
-        </li>
-        <li className="flex justify-between">
-          <span>1... e5</span>
-          <span>Best Move</span>
-        </li>
-        <li className="flex justify-between">
-          <span>2. Nf3</span>
-          <span>Inaccuracy</span>
-        </li>
-        {/* Add more moves dynamically */}
-      </ul>
+      <h2 className="text-lg font-bold">
+        Move Classification {positions?.length}
+      </h2>
+      {positions?.map((position, index) => (
+        <div key={index} className="flex items-center justify-between">
+          <span>{position.san}</span>
+          <span>{evaluations ? evaluations[index]?.classification: "Loading"}</span>
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,5 +1,16 @@
 /// <reference types="vite/client" />
 
+type classification =
+  | "brilliant"
+  | "great"
+  | "best"
+  | "excellent"
+  | "good"
+  | "inaccuracy"
+  | "mistake"
+  | "blunder"
+  | "book"
+  | "null";
 
 interface ApiInitialEval {
   text: string;
@@ -30,6 +41,7 @@ interface ApiInitialEval {
   fromNumeric: string;
   toNumeric: string;
   continuation: Array<any>;
+  classification?: classification;
 }
 
 interface Position {
@@ -52,16 +64,7 @@ interface CustomSquare {
 interface MoveInfo {
   from: Square;
   to: Square;
-  classification:
-    | "brilliant"
-    | "great"
-    | "best"
-    | "excellent"
-    | "good"
-    | "inaccuracy"
-    | "mistake"
-    | "blunder"
-    | "book";
+  classification: classification;
   color?: string;
 }
 
