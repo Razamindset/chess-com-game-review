@@ -3,10 +3,11 @@ import { Chess } from "chess.js";
 import { useNavigate } from "react-router-dom";
 import usePgnStore from "../../../lib/store/usePgnStore";
 import { ImportModal } from "../../modal";
-import { appIcons } from "../../../lib/icons";
+import { appIcons } from "../../board/icons";
+import { findOpening } from "../../../lib/openings/find-opening";
 
 export default function Home() {
-  const { setPositions, setGameHeaders } = usePgnStore();
+  const { setPositions, setGameHeaders, setOpening } = usePgnStore();
   const navigate = useNavigate();
   const [importPlatform, setImportPlatform] = useState<
     "chess.com" | "lichess" | null
@@ -37,9 +38,11 @@ export default function Home() {
 
       const positions = chess.history({ verbose: true });
       const headers = chess.getHeaders();
+      const opening = findOpening(positions);
 
       setGameHeaders(headers);
       setPositions(positions);
+      setOpening(opening);
 
       navigate("/analysis");
     } catch (error) {

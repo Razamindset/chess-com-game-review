@@ -1,12 +1,4 @@
-import { appIcons } from "../../lib/icons";
-
-interface PlayerInfoProps {
-  name: string;
-  image: string;
-  rating: number;
-  title: string;
-  isTop?: boolean;
-}
+import { appIcons } from "./icons";
 
 export default function PlayerInfo({
   name,

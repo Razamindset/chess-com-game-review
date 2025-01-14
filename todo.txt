@@ -1,5 +1,5 @@
-3. Add cached fetched system to improve performance for fetch for now skip the local eval please.
-4. Write algos for all moves except brilliant and great. Will implent those later when we have atlest something to show.
+Find out why the current Index sometimes messes up and find bugs in the code.
+4. Write algos for brilliant and great.
 5. Write local eval engine that gives the same format as the api response.
 6. Write some logic to check if the api is available or not if no then spin up a local stockifh instance for evaluation.
 7. Add dynamic depth etcc..

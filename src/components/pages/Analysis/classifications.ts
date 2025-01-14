@@ -1,14 +1,11 @@
-interface Move {
-  lan: string; // Long Algebraic Notation of the move
-}
-
 export const classifyMove = (
   move: Move,
   currentPositionEval: ApiInitialEval,
-  previousPositionEval: ApiInitialEval
-  //   bestMove: string
-): classification => {
-  // Sanity checks
+  previousPositionEval: ApiInitialEval,
+  opening: Opening | null,
+  currentPostion: Position,
+  currentIndex: number
+): ClassificationResponse => {
   if (!currentPositionEval || !previousPositionEval) {
     throw new Error("Incomplete evaluation data");
   }
@@ -22,74 +19,103 @@ export const classifyMove = (
     previousPositionEval.eval - currentPositionEval.eval
   );
 
-  // Determine the player's color
-  //   const playerColor = currentPositionEval.fen.includes("w") ? "b" : "w";
-
-  // Classification thresholds (can be tuned based on specific requirements)
+  // Classification thresholds
   const thresholds = {
-    bestMove: {
-      exactMatch: 0.01, // Very close to best move
-      maxEvalLoss: 0.1,
-    },
-    excellent: {
-      maxEvalLoss: 0.2,
-      maxCentipawnLoss: 20,
-    },
-    good: {
-      maxEvalLoss: 0.5,
-      maxCentipawnLoss: 50,
-    },
-    inaccuracy: {
-      maxEvalLoss: 1.0,
-      maxCentipawnLoss: 100,
-    },
-    mistake: {
-      maxEvalLoss: 2.0,
-      maxCentipawnLoss: 200,
-    },
-    // Anything beyond mistake is a blunder
+    bestMove: { exactMatch: 0.05, maxEvalLoss: 0.2 },
+    excellent: { maxEvalLoss: 0.5, maxCentipawnLoss: 30 },
+    good: { maxEvalLoss: 1.0, maxCentipawnLoss: 80 },
+    inaccuracy: { maxEvalLoss: 2.0, maxCentipawnLoss: 150 },
+    mistake: { maxEvalLoss: 3.0, maxCentipawnLoss: 300 },
   };
 
-  // Check if it's the exact best move
-  const isBestMove = move.lan === previousPositionEval.move;
+  console.log(currentPostion);
+
+  const isBookMove = opening?.moveSan.includes(currentPostion.san);
+  const accuracy = calculateAccuracy(relativeEvalChange, centipawnChange);
 
   if (
-    isBestMove ||
-    (relativeEvalChange <= thresholds.bestMove.exactMatch &&
-      relativeEvalChange > 0)
+    isBookMove &&
+    opening?.moveSan &&
+    currentIndex < opening?.moveSan?.length
   ) {
-    return "best";
+    console.log("Registerd as Book move");
+    return {
+      accuracy,
+      classification: "book",
+    };
   }
 
-  // Evaluate move quality based on evaluation changes
+  const isBestMove = move.lan === previousPositionEval.move;
+
+  if (isBestMove) {
+    return {
+      accuracy,
+      classification: "best",
+    };
+  }
+
   if (
     relativeEvalChange <= thresholds.excellent.maxEvalLoss &&
     centipawnChange <= thresholds.excellent.maxCentipawnLoss
   ) {
-    return "excellent";
+    return {
+      accuracy,
+      classification: "excellent",
+    };
   }
 
   if (
     relativeEvalChange <= thresholds.good.maxEvalLoss &&
     centipawnChange <= thresholds.good.maxCentipawnLoss
   ) {
-    return "good";
+    return {
+      accuracy,
+      classification: "good",
+    };
   }
 
   if (
     relativeEvalChange <= thresholds.inaccuracy.maxEvalLoss &&
     centipawnChange <= thresholds.inaccuracy.maxCentipawnLoss
   ) {
-    return "inaccuracy";
+    return {
+      accuracy,
+      classification: "inaccuracy",
+    };
   }
 
   if (
     relativeEvalChange <= thresholds.mistake.maxEvalLoss &&
     centipawnChange <= thresholds.mistake.maxCentipawnLoss
   ) {
-    return "mistake";
+    return {
+      accuracy,
+      classification: "mistake",
+    };
   }
 
-  // If it exceeds mistake thresholds, it's a blunder
-  return "blunder";
+  return {
+    accuracy,
+    classification: "blunder",
+  };
 };
+
+export function calculateAccuracy(
+  relativeEvalChange: number,
+  centipawnChange: number
+): number {
+  let accuracy = 100;
+
+  // Penalize based on relative evaluation change
+  accuracy -= relativeEvalChange * 30;
+
+  // Penalize based on centipawn change
+  accuracy -= centipawnChange / 3;
+
+  // Random factor for slight variations
+  const randomFactor = Math.random() * 2 - 1;
+  accuracy += randomFactor;
+
+  // Ensure accuracy is between 0 and 100
+  return Math.max(0, Math.min(100, accuracy));
+}

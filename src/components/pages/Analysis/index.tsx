@@ -10,15 +10,18 @@ import {
   FaFastForward,
   FaPlay,
 } from "react-icons/fa";
+
 import useChessSounds from "../../../lib/hooks/useSound";
 import { apiInitialEval } from "./evaluation";
 import { Chess } from "chess.js";
 import { classifyMove } from "./classifications";
+import { appIcons } from "../../board/icons";
+import { Navigate } from "react-router-dom";
 
 export default function ChessViewer() {
   const INITIAL_BOARD_FEN =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-  const { positions: parsedPositions, gameHeaders } = usePgnStore();
+  const { positions: parsedPositions, gameHeaders, opening } = usePgnStore();
   const { handleMoveSounds } = useChessSounds();
 
   // State management
@@ -31,6 +34,10 @@ export default function ChessViewer() {
   ]);
   const [loading, setLoading] = useState(false);
   const [showSuggestionArrows, setShowSuggestionArrows] = useState(false);
+  const [avgAccuracy, setAvgAccuracy] = useState<Accuracy>({
+    white: 0,
+    black: 0,
+  });
 
   useEffect(() => {
     if (parsedPositions?.length) {
@@ -112,10 +119,13 @@ export default function ChessViewer() {
 
     const prevEvaluation = evaluations[currentIndex + 1];
 
-    const classification = classifyMove(
+    const { classification, accuracy } = classifyMove(
       positions[nextIndex],
       currentEvaluation,
-      prevEvaluation
+      prevEvaluation,
+      opening,
+      positions[nextIndex],
+      nextIndex
     );
 
     //Update the last evalution with the classification
@@ -124,6 +134,7 @@ export default function ChessViewer() {
       updatedEvaluations[evaluations.length - 1] = {
         ...updatedEvaluations[evaluations.length - 1],
         classification,
+        accuracy,
       };
       return updatedEvaluations;
     });
@@ -179,6 +190,37 @@ export default function ChessViewer() {
     setShowSuggestionArrows(!showSuggestionArrows);
   };
 
+  const calculateAverageAccuracy = () => {
+    let whiteTotal = 0;
+    let blackTotal = 0;
+    let whiteCount = 0;
+    let blackCount = 0;
+
+    evaluations.forEach((evaluation, index) => {
+      if (evaluation.accuracy !== undefined) {
+        if (positions[index]?.color === "w") {
+          whiteTotal += evaluation.accuracy;
+          whiteCount++;
+        } else {
+          blackTotal += evaluation.accuracy;
+          blackCount++;
+        }
+      }
+    });
+
+    setAvgAccuracy({
+      white: whiteCount > 0 ? whiteTotal / whiteCount : 0,
+      black: blackCount > 0 ? blackTotal / blackCount : 0,
+    });
+  };
+
+  useEffect(() => {
+    calculateAverageAccuracy();
+  }, [evaluations]);
+
+  if (!positions) {
+    <Navigate to={"/"} />;
+  }
   return (
     <div className="min-h-screen w-full bg-gray-900 text-white flex flex-col items-center justify-center">
       <div className="w-full h-full max-w-6xl flex items-center gap-6">
@@ -187,16 +229,16 @@ export default function ChessViewer() {
             initialFen={currentFen}
             boardWidth={500}
             whitePlayer={{
-              name: gameHeaders?.white ?? "Player White",
-              image: "/src/assets/icon.png",
-              rating: 2400,
+              name: gameHeaders?.White ?? "Player White ?",
+              image: appIcons.mainIcon,
+              rating: gameHeaders?.WhiteElo ?? "rating ?",
               title: "GM",
             }}
             blackPlayer={{
-              name: gameHeaders?.black ?? "Player Black",
-              image: "/src/assets/icon.png",
-              rating: 2300,
-              title: "IM",
+              name: gameHeaders?.Black ?? "Player Black ?",
+              image: appIcons.mainIcon,
+              rating: gameHeaders?.BlackElo ?? "rating?",
+              title: "GM",
             }}
             lastMove={getCurrentMove()}
             initialArrows={getBestMove()}
@@ -205,7 +247,7 @@ export default function ChessViewer() {
         </div>
 
         <div className="w-1/3 h-full flex flex-col gap-6">
-          <div className="w-full bg-gray-800/70 backdrop-blur-md rounded-md p-4 flex flex-col gap-4 shadow-lg h-full">
+          <div className="w-full bg-gray-800/70 backdrop-blur-md rounded-md p-4 flex flex-col gap-4 shadow-lg h-[40vh]">
             {/* Navigation controls */}
             <div className="flex justify-between items-center">
               <button
@@ -272,8 +314,18 @@ export default function ChessViewer() {
             </div>
 
             {/* Move indicator */}
-            <div className="text-center text-sm text-gray-300">
-              Move: {currentIndex + 1} / {positions.length}
+            <div className="flex flex-col items-center gap-2">
+              <div className="text-center text-sm text-gray-300">
+                Move: {currentIndex + 1} / {positions.length}
+              </div>
+              <div>
+                <p className="text-white">
+                  Accuracy White: {avgAccuracy.white.toFixed(2)}%
+                </p>
+                <p className="text-white">
+                  Accuracy Black: {avgAccuracy.black.toFixed(2)}%
+                </p>
+              </div>
             </div>
             <div className="mt-4">
               <label className="toggle-switch">
@@ -286,9 +338,10 @@ export default function ChessViewer() {
               </label>
               <span className="ml-2">Show suggestion arrows</span>
             </div>
+            <span className="w-full">{opening?.name}</span>
           </div>
 
-          <div className="h-[60vh] overflow-y-auto">
+          <div className="h-[50vh] overflow-y-auto">
             <MoveList
               positions={positions}
               currentIndex={currentIndex}
