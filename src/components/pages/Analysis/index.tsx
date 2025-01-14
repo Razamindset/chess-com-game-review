@@ -156,6 +156,23 @@ export default function ChessViewer() {
     };
   };
 
+  const getBestMove = () => {
+    const wasBestMove = evaluations[currentIndex + 1]?.move;
+    if (!wasBestMove) return [];
+    const from = wasBestMove.slice(0, 2);
+    const to = wasBestMove.slice(2);
+
+    console.log(wasBestMove);
+    
+    return [
+      {
+        from,
+        to,
+        color: "green",
+        size: 10,
+      },
+    ];
+  };
   return (
     <div className="min-h-screen w-full bg-gray-900 text-white flex flex-col items-center justify-center p-2">
       <div className="w-full max-w-6xl flex gap-6">
@@ -176,6 +193,7 @@ export default function ChessViewer() {
               title: "IM",
             }}
             lastMove={getCurrentMove()}
+            initialArrows={getBestMove()}
           />
         </div>
 

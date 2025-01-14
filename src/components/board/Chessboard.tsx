@@ -20,7 +20,7 @@ export default function Chessboard({
   >({});
   const [error, setError] = useState<string | null>(null);
   const [kingInCheck, setKingInCheck] = useState<Square | null>(null);
-  const [arrows] = useState<Arrow[]>(initialArrows);
+  const [arrows, setArrows] = useState<Arrow[]>(initialArrows);
   const [isFlipped, setIsFlipped] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -31,8 +31,9 @@ export default function Chessboard({
   }, [initialFen]);
 
   useEffect(() => {
+    setArrows(initialArrows)
     drawArrows();
-  }, [arrows, isFlipped]);
+  }, [initialArrows, lastMove, initialFen]);
 
   const getPieceSymbol = (piece: Piece) => {
     return pieceSymbols[piece];
@@ -109,6 +110,8 @@ export default function Chessboard({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const drawSingleArrow = (arrow: Arrow) => {
+      console.log("drawing arrow from", arrow.from, "to", arrow.to);
+      
       const fromSquare = board.querySelector(
         `[data-square="${arrow.from}"]`
       ) as HTMLElement;

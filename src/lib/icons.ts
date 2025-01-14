@@ -31,13 +31,13 @@ import LichessIcon from "../assets/lichess.svg";
 export const classificationConfig = {
   brilliant: { emoji: BrilliantIcon, color: "#1baca6" },
   great: { emoji: GreatIcon, color: "#5c8bb0" },
-  best: { emoji: BestIcon, color: "#98bc60" },
+  best: { emoji: BestIcon, color: "#7ca825" },
   excellent: { emoji: ExcellentIcon, color: "#98bc60" },
-  good: { emoji: GoodIcon, color: "#98bc60" },
+  good: { emoji: GoodIcon, color: "#6da48d" },
   inaccuracy: { emoji: InaccuracyIcon, color: "#e6912c" },
-  mistake: { emoji: MistakeIcon, color: "#df5f5f" },
+  mistake: { emoji: MistakeIcon, color: "#e18d2b" },
   blunder: { emoji: BlunderIcon, color: "#c11c1c" },
-  book: { emoji: BookIcon, color: "#ffff0061" },
+  book: { emoji: BookIcon, color: "#e12222" },
   null: { emoji: "", color: "#d9cd3e" },
 };
 
