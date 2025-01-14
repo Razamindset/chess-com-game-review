@@ -10,11 +10,13 @@ import {
   FaFastForward,
   FaPlay,
 } from "react-icons/fa";
+import useChessSounds from "../../../lib/hooks/useSound";
 
 export default function ChessViewer() {
   const INITIAL_BOARD_FEN =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   const { positions: parsedPositions, gameHeaders } = usePgnStore();
+  const { handleMoveSounds } = useChessSounds();
 
   // State management
   const [positions, setPositions] = useState<Position[]>([]);
@@ -62,6 +64,7 @@ export default function ChessViewer() {
     const nextIndex = currentIndex + 1;
     setCurrentIndex(nextIndex);
     setCurrentFen(positions[nextIndex].after);
+    handleMoveSounds(positions[nextIndex]);
   };
 
   const handlePreviousMove = () => {
@@ -73,6 +76,7 @@ export default function ChessViewer() {
     } else {
       setCurrentIndex(prevIndex);
       setCurrentFen(positions[prevIndex].after);
+      handleMoveSounds(positions[prevIndex]);
     }
   };
 

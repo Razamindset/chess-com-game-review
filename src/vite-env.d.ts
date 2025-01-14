@@ -1,4 +1,6 @@
 /// <reference types="vite/client" />
+
+
 interface ApiInitialEval {
   text: string;
   captured: boolean;
