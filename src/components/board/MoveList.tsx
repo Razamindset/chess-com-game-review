@@ -9,7 +9,7 @@ export default function MoveList({
 }) {
   if (!positions || !positions.length) return <div>Loading</div>;
   return (
-    <div className="w-full h-[70vh] overflow-y-auto bg-gray-800 rounded-md p-4 flex flex-col gap-4">
+    <div className="w-full bg-gray-800 rounded-md p-4 flex flex-col gap-4">
       <h2 className="text-lg font-bold">
         Move Classification {positions?.length}
       </h2>

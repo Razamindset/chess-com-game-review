@@ -92,4 +92,5 @@ interface ChessboardProps {
     rating: number;
     title: string;
   };
+  showArrows: boolean;
 }

@@ -13,6 +13,7 @@ export default function Chessboard({
   boardWidth,
   whitePlayer,
   blackPlayer,
+  showArrows,
 }: ChessboardProps) {
   const [board, setBoard] = useState<Piece[][]>(fenToBoard(initialFen));
   const [customSquares, setCustomSquares] = useState<
@@ -31,9 +32,13 @@ export default function Chessboard({
   }, [initialFen]);
 
   useEffect(() => {
-    setArrows(initialArrows)
+    setArrows(initialArrows);
     drawArrows();
   }, [initialArrows, lastMove, initialFen]);
+
+  useEffect(() => {
+    drawArrows();
+  }, [arrows, showArrows, isFlipped]);
 
   const getPieceSymbol = (piece: Piece) => {
     return pieceSymbols[piece];
@@ -109,9 +114,9 @@ export default function Chessboard({
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    if (!showArrows) return;
+
     const drawSingleArrow = (arrow: Arrow) => {
-      console.log("drawing arrow from", arrow.from, "to", arrow.to);
-      
       const fromSquare = board.querySelector(
         `[data-square="${arrow.from}"]`
       ) as HTMLElement;
@@ -136,24 +141,28 @@ export default function Chessboard({
 
         ctx.strokeStyle = arrow.color;
         ctx.lineWidth = arrow.size * scaleX;
-        ctx.lineCap = "square";
+        ctx.lineCap = "round";
 
         const angle = Math.atan2(endY - startY, endX - startX);
+        const arrowHeadLength = 15 * scaleX;
 
         ctx.beginPath();
         ctx.moveTo(startX, startY);
-        ctx.lineTo(endX, endY);
+        ctx.lineTo(
+          endX - arrowHeadLength * Math.cos(angle),
+          endY - arrowHeadLength * Math.sin(angle)
+        );
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.moveTo(endX, endY - 25);
+        ctx.moveTo(endX, endY);
         ctx.lineTo(
-          endX - 20 * scaleX * Math.cos(angle) - 15 * scaleX * Math.sin(angle),
-          endY - 20 * scaleY * Math.sin(angle) + 15 * scaleY * Math.cos(angle)
+          endX - arrowHeadLength * Math.cos(angle - Math.PI / 6),
+          endY - arrowHeadLength * Math.sin(angle - Math.PI / 6)
         );
         ctx.lineTo(
-          endX - 20 * scaleX * Math.cos(angle) + 15 * scaleX * Math.sin(angle),
-          endY - 20 * scaleY * Math.sin(angle) - 15 * scaleY * Math.cos(angle)
+          endX - arrowHeadLength * Math.cos(angle + Math.PI / 6),
+          endY - arrowHeadLength * Math.sin(angle + Math.PI / 6)
         );
         ctx.closePath();
         ctx.fillStyle = arrow.color;

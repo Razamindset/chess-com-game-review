@@ -30,6 +30,7 @@ export default function ChessViewer() {
     apiInitialEval,
   ]);
   const [loading, setLoading] = useState(false);
+  const [showSuggestionArrows, setShowSuggestionArrows] = useState(false);
 
   useEffect(() => {
     if (parsedPositions?.length) {
@@ -163,7 +164,7 @@ export default function ChessViewer() {
     const to = wasBestMove.slice(2);
 
     console.log(wasBestMove);
-    
+
     return [
       {
         from,
@@ -173,9 +174,14 @@ export default function ChessViewer() {
       },
     ];
   };
+
+  const handleSuggestionArrowsToggle = () => {
+    setShowSuggestionArrows(!showSuggestionArrows);
+  };
+
   return (
-    <div className="min-h-screen w-full bg-gray-900 text-white flex flex-col items-center justify-center p-2">
-      <div className="w-full max-w-6xl flex gap-6">
+    <div className="min-h-screen w-full bg-gray-900 text-white flex flex-col items-center justify-center">
+      <div className="w-full h-full max-w-6xl flex items-center gap-6">
         <div className="flex flex-col items-center w-2/3">
           <Chessboard
             initialFen={currentFen}
@@ -194,11 +200,12 @@ export default function ChessViewer() {
             }}
             lastMove={getCurrentMove()}
             initialArrows={getBestMove()}
+            showArrows={showSuggestionArrows}
           />
         </div>
 
-        <div className="w-1/3 flex flex-col gap-6">
-          <div className="w-full bg-gray-800/70 backdrop-blur-md rounded-md p-4 flex flex-col gap-4 shadow-lg">
+        <div className="w-1/3 h-full flex flex-col gap-6">
+          <div className="w-full bg-gray-800/70 backdrop-blur-md rounded-md p-4 flex flex-col gap-4 shadow-lg h-full">
             {/* Navigation controls */}
             <div className="flex justify-between items-center">
               <button
@@ -268,14 +275,26 @@ export default function ChessViewer() {
             <div className="text-center text-sm text-gray-300">
               Move: {currentIndex + 1} / {positions.length}
             </div>
+            <div className="mt-4">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={showSuggestionArrows}
+                  onChange={handleSuggestionArrowsToggle}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+              <span className="ml-2">Show suggestion arrows</span>
+            </div>
           </div>
 
-          {/* Uncomment if you want to add the move list */}
-          <MoveList
-            positions={positions}
-            currentIndex={currentIndex}
-            evaluations={evaluations}
-          />
+          <div className="h-[60vh] overflow-y-auto">
+            <MoveList
+              positions={positions}
+              currentIndex={currentIndex}
+              evaluations={evaluations}
+            />
+          </div>
         </div>
       </div>
     </div>
