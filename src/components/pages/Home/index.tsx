@@ -12,6 +12,7 @@ export default function Home() {
   const [importPlatform, setImportPlatform] = useState<
     "chess.com" | "lichess" | null
   >(null);
+  const [loading, setLoading] = useState(false);
 
   const samplePgn = `
     [Event "Scholar's Mate"]
@@ -33,6 +34,7 @@ export default function Home() {
     const pgn = (formData.get("pgn") as string).trim();
 
     try {
+      setLoading(true);
       const chess = new Chess();
       chess.loadPgn(pgn);
 
@@ -47,6 +49,8 @@ export default function Home() {
       navigate("/analysis");
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,9 +76,10 @@ export default function Home() {
         <div className="flex justify-end gap-4">
           <button
             type="submit"
+            disabled={loading}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-500 transition"
           >
-            Submit
+            {loading ? "Loading Opening" : "Analyze"}
           </button>
         </div>
       </form>

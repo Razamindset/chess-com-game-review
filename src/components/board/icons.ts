@@ -39,6 +39,7 @@ export const classificationConfig = {
   blunder: { emoji: BlunderIcon, color: "#c11c1c" },
   book: { emoji: BookIcon, color: "rgb(135 114 93)" },
   null: { emoji: "", color: "#d9cd3e" },
+  error: { emoji: "", color: "#d9cd3e" },
 };
 
 // Piece Symbols

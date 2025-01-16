@@ -5,6 +5,7 @@ import PlayerInfo from "./PlayerInfo";
 import { FiRefreshCw } from "react-icons/fi";
 import { classificationConfig, pieceSymbols } from "./icons";
 import { FaSpinner } from "react-icons/fa";
+import EvlaBar from "./eval-bar";
 
 export default function Chessboard({
   initialFen,
@@ -14,6 +15,7 @@ export default function Chessboard({
   whitePlayer,
   blackPlayer,
   showArrows,
+  evaluation,
 }: ChessboardProps) {
   const [board, setBoard] = useState<Piece[][]>(fenToBoard(initialFen));
   const [customSquares, setCustomSquares] = useState<
@@ -178,99 +180,106 @@ export default function Chessboard({
   };
 
   return (
-    <div
-      className="flex flex-col items-center"
-      style={{ width: `${boardWidth}px` }}
-    >
-      <PlayerInfo
-        name={isFlipped ? whitePlayer.name : blackPlayer.name}
-        image={isFlipped ? whitePlayer.image : blackPlayer.image}
-        rating={isFlipped ? whitePlayer.rating : blackPlayer.rating}
-        title={isFlipped ? whitePlayer.title : blackPlayer.title}
-        isTop
+    <div className="flex gap-2 items-center">
+      <EvlaBar
+        height={`${boardWidth}px`}
+        isFlipped={isFlipped}
+        evaluation={evaluation}
       />
-      <div className="relative" ref={boardRef}>
-        <div className="grid grid-cols-8 gap-0">
-          {(isFlipped ? [...board].reverse() : board).map((row, rowIndex) =>
-            (isFlipped ? [...row].reverse() : row).map((piece, colIndex) => {
-              const square = `${String.fromCharCode(
-                97 + (isFlipped ? 7 - colIndex : colIndex)
-              )}${isFlipped ? rowIndex + 1 : 8 - rowIndex}` as Square;
-              return (
-                <div
-                  key={`${rowIndex}-${colIndex}`}
-                  className={`flex items-center justify-center text-3xl relative
+      <div
+        className="flex flex-col items-center"
+        style={{ width: `${boardWidth}px` }}
+      >
+        <PlayerInfo
+          name={isFlipped ? whitePlayer.name : blackPlayer.name}
+          image={isFlipped ? whitePlayer.image : blackPlayer.image}
+          rating={isFlipped ? whitePlayer.rating : blackPlayer.rating}
+          title={isFlipped ? whitePlayer.title : blackPlayer.title}
+          isTop
+        />
+        <div className="relative" ref={boardRef}>
+          <div className="grid grid-cols-8 gap-0">
+            {(isFlipped ? [...board].reverse() : board).map((row, rowIndex) =>
+              (isFlipped ? [...row].reverse() : row).map((piece, colIndex) => {
+                const square = `${String.fromCharCode(
+                  97 + (isFlipped ? 7 - colIndex : colIndex)
+                )}${isFlipped ? rowIndex + 1 : 8 - rowIndex}` as Square;
+                return (
+                  <div
+                    key={`${rowIndex}-${colIndex}`}
+                    className={`flex items-center justify-center text-3xl relative
                     ${
                       isLightSquare(rowIndex, colIndex)
                         ? "bg-[#e8c9a9]"
                         : "bg-[#bd7e57]"
                     }`}
-                  style={{
-                    ...getSquareStyle(rowIndex, colIndex),
-                    width: `${boardWidth / 8}px`,
-                    height: `${boardWidth / 8}px`,
-                  }}
-                  data-square={square}
-                >
-                  {piece && (
-                    <img
-                      src={getPieceSymbol(piece)}
-                      alt={piece}
-                      className="w-full h-full"
-                    />
-                  )}
-                  {lastMove &&
-                    lastMove.classification != "null" &&
-                    lastMove.to === square && (
+                    style={{
+                      ...getSquareStyle(rowIndex, colIndex),
+                      width: `${boardWidth / 8}px`,
+                      height: `${boardWidth / 8}px`,
+                    }}
+                    data-square={square}
+                  >
+                    {piece && (
                       <img
-                        src={
-                          classificationConfig[
-                            lastMove.classification
-                              ? lastMove.classification
-                              : "null"
-                          ]?.emoji
-                        }
-                        alt={
-                          lastMove && lastMove?.to === square
-                            ? lastMove.classification
-                            : "null"
-                        }
-                        className="absolute -top-3 right-0 w-7 h-7"
+                        src={getPieceSymbol(piece)}
+                        alt={piece}
+                        className="w-full h-full"
                       />
                     )}
-                  {lastMove &&
-                    lastMove.classification === "null" &&
-                    lastMove.to === square && (
-                      <FaSpinner className="absolute animate-spin -top-3 right-0 w-7 h-7 bg-green-600 p-1 rounded-full" />
-                    )}
-                </div>
-              );
-            })
-          )}
-        </div>
-        <button
-          onClick={handleFlipBoard}
-          className="absolute -right-12 top-1/2 transform -translate-y-1/2"
-        >
-          <FiRefreshCw
-            size={25}
-            className="text-gray-400 hover:text-gray-300 hover:scale-110 transition-all"
+                    {lastMove &&
+                      lastMove.classification != "null" &&
+                      lastMove.to === square && (
+                        <img
+                          src={
+                            classificationConfig[
+                              lastMove.classification
+                                ? lastMove.classification
+                                : "null"
+                            ]?.emoji
+                          }
+                          alt={
+                            lastMove && lastMove?.to === square
+                              ? lastMove.classification
+                              : "null"
+                          }
+                          className="absolute -top-3 right-0 w-7 h-7"
+                        />
+                      )}
+                    {lastMove &&
+                      lastMove.classification === "null" &&
+                      lastMove.to === square && (
+                        <FaSpinner className="absolute animate-spin -top-3 right-0 w-7 h-7 bg-green-600 p-1 rounded-full" />
+                      )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+          <button
+            onClick={handleFlipBoard}
+            className="absolute -right-12 top-1/2 transform -translate-y-1/2"
+          >
+            <FiRefreshCw
+              size={25}
+              className="text-gray-400 hover:text-gray-300 hover:scale-110 transition-all"
+            />
+          </button>
+          <canvas
+            ref={canvasRef}
+            className="absolute top-0 left-0 w-full h-full pointer-events-none"
+            width={512}
+            height={512}
           />
-        </button>
-        <canvas
-          ref={canvasRef}
-          className="absolute top-0 left-0 w-full h-full pointer-events-none"
-          width={512}
-          height={512}
+        </div>
+        <PlayerInfo
+          name={isFlipped ? blackPlayer.name : whitePlayer.name}
+          image={isFlipped ? blackPlayer.image : whitePlayer.image}
+          rating={isFlipped ? blackPlayer.rating : whitePlayer.rating}
+          title={isFlipped ? blackPlayer.title : whitePlayer.title}
         />
+        {error && <p className="mt-2 text-red-500">{error}</p>}
       </div>
-      <PlayerInfo
-        name={isFlipped ? blackPlayer.name : whitePlayer.name}
-        image={isFlipped ? blackPlayer.image : whitePlayer.image}
-        rating={isFlipped ? blackPlayer.rating : whitePlayer.rating}
-        title={isFlipped ? blackPlayer.title : whitePlayer.title}
-      />
-      {error && <p className="mt-2 text-red-500">{error}</p>}
     </div>
   );
 }

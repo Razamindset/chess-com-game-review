@@ -68,26 +68,34 @@ export default function ChessViewer() {
 
     const isDraw = game.isDraw();
     if (isCheckMate || isDraw) {
-      console.log("Game is over");
       return {
         isCheckMate,
         isDraw,
       };
     }
 
-    const res = await fetch(`https://chess-api.com/v1`, {
-      method: "POST",
-      body: JSON.stringify({
-        fen: position.after,
-        depth,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer 70901713-134c-484c-9107-47b295663715",
-      },
-      cache: "force-cache",
-    });
-    return res.json();
+    try {
+      const res = await fetch(`https://chess-api.com/v1`, {
+        method: "POST",
+        body: JSON.stringify({
+          fen: position.after,
+          depth,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer 70901713-134c-484c-9107-47b295663715",
+        },
+        cache: "force-cache",
+      });
+      return res.json();
+    } catch (error: any) {
+      console.log(position);
+
+      return {
+        error: true,
+        message: error.message,
+      };
+    }
   };
 
   // Navigation functions
@@ -110,6 +118,12 @@ export default function ChessViewer() {
     handleMoveSounds(positions[nextIndex]);
 
     setLoading(true);
+
+    //Check if the evaluation already exists in the state
+    if (evaluations[nextIndex + 1]) {
+      setLoading(false);
+      return;
+    }
 
     const currentEvaluation: ApiInitialEval = await reviewPostion(
       positions[nextIndex]
@@ -138,6 +152,7 @@ export default function ChessViewer() {
       };
       return updatedEvaluations;
     });
+
     setLoading(false);
     return;
   };
@@ -174,8 +189,6 @@ export default function ChessViewer() {
     const from = wasBestMove.slice(0, 2);
     const to = wasBestMove.slice(2);
 
-    console.log(wasBestMove);
-
     return [
       {
         from,
@@ -197,7 +210,7 @@ export default function ChessViewer() {
     let blackCount = 0;
 
     evaluations.forEach((evaluation, index) => {
-      if (evaluation.accuracy !== undefined) {
+      if (evaluation.accuracy && !evaluation.error) {
         if (positions[index]?.color === "w") {
           whiteTotal += evaluation.accuracy;
           whiteCount++;
@@ -243,6 +256,10 @@ export default function ChessViewer() {
             lastMove={getCurrentMove()}
             initialArrows={getBestMove()}
             showArrows={showSuggestionArrows}
+            evaluation={
+              evaluations[currentIndex + 1]?.eval ||
+              evaluations[evaluations.length - 1].eval
+            }
           />
         </div>
 
@@ -315,19 +332,16 @@ export default function ChessViewer() {
 
             {/* Move indicator */}
             <div className="flex flex-col items-center gap-2">
-              <div className="text-center text-sm text-gray-300">
-                Move: {currentIndex + 1} / {positions.length}
-              </div>
               <div>
                 <p className="text-white">
-                  Accuracy White: {avgAccuracy.white.toFixed(2)}%
+                  Accuracy White: {avgAccuracy?.white?.toFixed(2)}%
                 </p>
                 <p className="text-white">
-                  Accuracy Black: {avgAccuracy.black.toFixed(2)}%
+                  Accuracy Black: {avgAccuracy?.black?.toFixed(2)}%
                 </p>
               </div>
             </div>
-            <div className="mt-4">
+            <div className="mt-2">
               <label className="toggle-switch">
                 <input
                   type="checkbox"
@@ -338,7 +352,9 @@ export default function ChessViewer() {
               </label>
               <span className="ml-2">Show suggestion arrows</span>
             </div>
-            <span className="w-full">{opening?.name}</span>
+            <span className="w-full line-clamp-1 text-ellipsis">
+              {opening?.name}
+            </span>
           </div>
 
           <div className="h-[50vh] overflow-y-auto">

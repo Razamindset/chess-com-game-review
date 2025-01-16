@@ -10,9 +10,11 @@ type classification =
   | "mistake"
   | "blunder"
   | "book"
-  | "null";
+  | "null"
+  | "error";
 
 interface ApiInitialEval {
+  error?: boolean;
   text: string;
   captured: boolean;
   promotion: boolean;
@@ -92,6 +94,7 @@ interface ChessboardProps {
   whitePlayer: PlayerInfoProps;
   blackPlayer: PlayerInfoProps;
   showArrows: boolean;
+  evaluation: number;
 }
 
 interface Accuracy {

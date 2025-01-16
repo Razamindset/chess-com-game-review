@@ -28,8 +28,6 @@ export const classifyMove = (
     mistake: { maxEvalLoss: 3.0, maxCentipawnLoss: 300 },
   };
 
-  console.log(currentPostion);
-
   const isBookMove = opening?.moveSan.includes(currentPostion.san);
   const accuracy = calculateAccuracy(relativeEvalChange, centipawnChange);
 
@@ -38,7 +36,6 @@ export const classifyMove = (
     opening?.moveSan &&
     currentIndex < opening?.moveSan?.length
   ) {
-    console.log("Registerd as Book move");
     return {
       accuracy,
       classification: "book",
@@ -91,6 +88,12 @@ export const classifyMove = (
     return {
       accuracy,
       classification: "mistake",
+    };
+  }
+  if (currentPositionEval.error) {
+    return {
+      accuracy: 80,
+      classification: "null",
     };
   }
 
