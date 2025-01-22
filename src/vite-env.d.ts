@@ -16,11 +16,6 @@ type classification =
 interface ApiInitialEval {
   error?: boolean;
   text: string;
-  captured: boolean;
-  promotion: boolean;
-  isCapture: boolean;
-  isPromotion: boolean;
-  isCastling: boolean;
   fen: string;
   type: string;
   depth: number;
@@ -28,9 +23,8 @@ interface ApiInitialEval {
   eval: number;
   centipawns: number;
   mate: number | null;
-  continuationArr: Array<any>;
+  // continuationArr: Array<any>;
   debug: string;
-  winChance: number;
   taskId: string;
   turn: string;
   color: string;
@@ -38,11 +32,8 @@ interface ApiInitialEval {
   from: string;
   to: string;
   san: string;
-  flags: string;
   lan: string;
-  fromNumeric: string;
-  toNumeric: string;
-  continuation: Array<any>;
+  // continuation: Array<any>;
   classification?: classification;
   accuracy?: number;
 }

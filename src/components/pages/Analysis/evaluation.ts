@@ -1,10 +1,5 @@
 export const apiInitialEval: ApiInitialEval = {
   text: "Move d2 → d4 (d4): [0.23]. The game is balanced. Depth 18.",
-  captured: false,
-  promotion: false,
-  isCapture: false,
-  isPromotion: false,
-  isCastling: false,
   fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
   type: "bestmove",
   depth: 18,
@@ -12,10 +7,9 @@ export const apiInitialEval: ApiInitialEval = {
   eval: 0.23,
   centipawns: 23,
   mate: null,
-  continuationArr: [],
+  // continuationArr: [],
   debug:
     "info depth 18 seldepth 25 multipv 1 score cp 23 lowerbound nodes 1681581 nps 32972176 hashfull 35 tbhits 0 time 51 pv d2d4",
-  winChance: 52.115931524066205,
   taskId: "1i9mrr07u",
   turn: "w",
   color: "w",
@@ -23,9 +17,6 @@ export const apiInitialEval: ApiInitialEval = {
   from: "d2",
   to: "d4",
   san: "d4",
-  flags: "b",
   lan: "d2d4",
-  fromNumeric: "42",
-  toNumeric: "44",
-  continuation: [],
+  // continuation: [],
 };
