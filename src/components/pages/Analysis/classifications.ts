@@ -42,6 +42,8 @@ export const classifyMove = (
     };
   }
 
+  console.log();
+  
   const isBestMove = move.lan === previousPositionEval.move;
 
   if (isBestMove) {

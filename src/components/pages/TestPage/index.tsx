@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useStockfish } from "./useStockfish";
+import { useStockfish } from "../../../lib/hooks/useStockfish";
 
 export default function TestPage() {
   const { evaluate } = useStockfish();
-  const [fen, setFen] = useState("rnbqkb1r/pp1p1ppp/2p2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 4");
+  const [fen, setFen] = useState(
+    "rnbqkb1r/pp1p1ppp/2p2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 4"
+  );
   const [depth, setDepth] = useState(10);
   const [evaluationResult, setEvaluationResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -22,6 +24,8 @@ export default function TestPage() {
     const startTime = Date.now();
     try {
       const response = await evaluate(fen, depth);
+      console.log(response);
+
       const endTime = Date.now();
       setEvaluationResult(response);
       setEvaluationTime((endTime - startTime) / 1000); // time in seconds
@@ -35,7 +39,7 @@ export default function TestPage() {
   return (
     <div className="p-4">
       <h1 className="text-xl font-semibold">Chess Engine Evaluation</h1>
-      
+
       <div className="mt-4">
         <label className="block text-sm font-medium">FEN</label>
         <input
@@ -77,10 +81,18 @@ export default function TestPage() {
         <div className="mt-4">
           <h2 className="text-lg font-semibold">Evaluation Result</h2>
           <div>
-            <p><strong>Best Move:</strong> {evaluationResult.text}</p>
-            <p><strong>Evaluation Score:</strong> {evaluationResult.eval}</p>
-            <p><strong>Centipawns:</strong> {evaluationResult.centipawns}</p>
-            <p><strong>Debug Info:</strong> {evaluationResult.debug}</p>
+            <p>
+              <strong>Best Move:</strong> {evaluationResult.text}
+            </p>
+            <p>
+              <strong>Evaluation Score:</strong> {evaluationResult.eval}
+            </p>
+            <p>
+              <strong>Centipawns:</strong> {evaluationResult.centipawns}
+            </p>
+            <p>
+              <strong>Debug Info:</strong> {evaluationResult.debug}
+            </p>
           </div>
         </div>
       )}

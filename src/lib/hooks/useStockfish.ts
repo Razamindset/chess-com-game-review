@@ -7,7 +7,7 @@ export function useStockfish() {
   const engineReadyRef = useRef(false);
 
   useEffect(() => {
-    const worker = new Worker("/src/assets/engine/stockfish.js");
+    const worker = new Worker("/stockfish.js");
     workerRef.current = worker;
 
     const initHandler = (event: MessageEvent) => {
@@ -15,9 +15,7 @@ export function useStockfish() {
 
       if (data === "uciok") {
         console.log("UCI initialized");
-        worker.postMessage(
-          "setoption name EvalFile value /src/assets/engine/tinynnue.nnue"
-        );
+        worker.postMessage("setoption name EvalFile value /tinynnue.nnue");
         worker.postMessage("isready");
       } else if (data === "readyok") {
         console.log("Engine ready");
@@ -86,29 +84,13 @@ export function useStockfish() {
 
             const mate = mateMatch ? parseInt(mateMatch[1]) : null;
             const centipawns = cpMatch ? parseInt(cpMatch[2]) : 0;
-            const evalScore = centipawns !== 0 ? centipawns / 100 : 0;
+            const evalScore =
+              centipawns !== 0 ? centipawns / 100 : mate ? Infinity : 0;
             const move = pvMatch ? pvMatch[1] : null;
             const from = move.slice(0, 2);
             const to = move.slice(2, 4);
-            const promotion = move.slice(4, 5);
             const san = move.slice(2, 4);
-
             const chessboard = new Chess(fen);
-            console.log(chessboard.fen(), from, to, promotion, san);
-            let madeMove;
-
-            if (promotion) {
-              madeMove = chessboard.move({
-                from,
-                to,
-                promotion: promotion ? promotion : "",
-              });
-            } else {
-              madeMove = chessboard.move({
-                from,
-                to,
-              });
-            }
 
             const response: ApiInitialEval = {
               taskId: taskId,
@@ -118,12 +100,10 @@ export function useStockfish() {
               san,
               eval: evalScore,
               centipawns,
-              turn: chessboard.turn(),
               color: color,
-              piece: chessboard.get(to)?.type ?? "",
+              piece: chessboard.get(from)?.type ?? "",
               type: "bestmove",
               depth,
-              lan: madeMove.lan,
               fen,
               error: false,
               text: `Move ${from} → ${to} (${san}): [${evalScore}]. Depth ${depth}.`,

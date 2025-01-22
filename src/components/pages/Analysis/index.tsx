@@ -17,6 +17,7 @@ import { Chess } from "chess.js";
 import { classifyMove } from "./classifications";
 import { appIcons } from "../../board/icons";
 import { Navigate } from "react-router-dom";
+import { useStockfish } from "../../../lib/hooks/useStockfish";
 
 export default function ChessViewer() {
   const INITIAL_BOARD_FEN =
@@ -38,6 +39,8 @@ export default function ChessViewer() {
     white: 0,
     black: 0,
   });
+
+  const { evaluate } = useStockfish();
 
   useEffect(() => {
     if (parsedPositions?.length) {
@@ -62,17 +65,28 @@ export default function ChessViewer() {
   //   return () => clearInterval(intervalId);
   // }, [isAutoPlaying, currentIndex, positions]);
 
-  const reviewPostion = async (position: Position, depth = 18) => {
+  const reviewPosition = async (
+    position: Position,
+    depth = 18
+  ): Promise<any> => {
     const game = new Chess(position.after);
     const isCheckMate = game.isCheckmate();
-
     const isDraw = game.isDraw();
+
     if (isCheckMate || isDraw) {
       return {
         isCheckMate,
         isDraw,
+        error: true,
       };
     }
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 3000);
 
     try {
       const res = await fetch(`https://chess-api.com/v1`, {
@@ -83,18 +97,25 @@ export default function ChessViewer() {
         }),
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer 70901713-134c-484c-9107-47b295663715",
         },
-        cache: "force-cache",
+        signal,
+        cache: "force-cache", // Optional, ensure it's supported
       });
-      return res.json();
+      return await res.json();
     } catch (error: any) {
-      console.log(position);
-
+      console.log("Request timed out, using fallback evaluation...");
+      if (error.name === "AbortError") {
+        console.log("Request timed out, using fallback evaluation...");
+        const evaluation = await evaluate(position.after, depth);
+        return evaluation;
+      }
+      console.error("Error in reviewPosition:", error);
       return {
         error: true,
         message: error.message,
       };
+    } finally {
+      clearTimeout(timeoutId);
     }
   };
 
@@ -125,9 +146,16 @@ export default function ChessViewer() {
       return;
     }
 
-    const currentEvaluation: ApiInitialEval = await reviewPostion(
-      positions[nextIndex]
-    );
+    const currentEvaluation = await reviewPosition(positions[nextIndex]);
+
+    if (
+      currentEvaluation.error ||
+      currentEvaluation.isCheckMate ||
+      currentEvaluation.isDraw
+    ) {
+      setLoading(false);
+      return;
+    }
 
     setEvaluations((prev) => [...prev, currentEvaluation]);
 
