@@ -17,7 +17,7 @@ import { Chess } from "chess.js";
 import { classifyMove } from "./classifications";
 import { appIcons } from "../../board/icons";
 import { Navigate } from "react-router-dom";
-import { useStockfish } from "../../../lib/hooks/useStockfish";
+// import { useStockfish } from "../../../lib/hooks/useStockfish";
 
 export default function ChessViewer() {
   const INITIAL_BOARD_FEN =
@@ -40,7 +40,7 @@ export default function ChessViewer() {
     black: 0,
   });
 
-  const { evaluate } = useStockfish();
+  // const { evaluate } = useStockfish();
 
   useEffect(() => {
     if (parsedPositions?.length) {
@@ -81,12 +81,12 @@ export default function ChessViewer() {
       };
     }
 
-    const controller = new AbortController();
-    const signal = controller.signal;
+    // const controller = new AbortController();
+    // const signal = controller.signal;
 
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, 3000);
+    // const timeoutId = setTimeout(() => {
+    //   controller.abort();
+    // }, 3000);
 
     try {
       const res = await fetch(`https://chess-api.com/v1`, {
@@ -98,24 +98,24 @@ export default function ChessViewer() {
         headers: {
           "Content-Type": "application/json",
         },
-        signal,
+        // signal,
         cache: "force-cache", // Optional, ensure it's supported
       });
       return await res.json();
     } catch (error: any) {
       console.log("Request timed out, using fallback evaluation...");
-      if (error.name === "AbortError") {
-        console.log("Request timed out, using fallback evaluation...");
-        const evaluation = await evaluate(position.after, depth);
-        return evaluation;
-      }
+      // if (error.name === "AbortError") {
+      //   console.log("Request timed out, using fallback evaluation...");
+      //   const evaluation = await evaluate(position.after, depth);
+      //   return evaluation;
+      // }
       console.error("Error in reviewPosition:", error);
       return {
         error: true,
         message: error.message,
       };
     } finally {
-      clearTimeout(timeoutId);
+      // clearTimeout(timeoutId);
     }
   };
 
