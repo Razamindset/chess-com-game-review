@@ -1,136 +1,80 @@
-// export const pieceValues = {
-//   p: 1,
-//   n: 3,
-//   b: 3,
-//   r: 5,
-//   q: 9,
-//   k: Infinity,
-//   m: 0,
-// };
+import { Chess, Piece, Square, Color, PieceSymbol } from "chess.js";
 
-// interface Piece {
-//   square: Square;
-//   type: PieceSymbol;
-//   color: Color;
-// }
-// interface SacedPiece {
-//   piece?: Piece;
-//   defendersSquares?: Square[];
-//   attackersSquares?: Square[];
-// }
+export const pieceValues = {
+  p: 1,
+  n: 3,
+  b: 3,
+  r: 5,
+  q: 9,
+  k: Infinity,
+};
 
-// function isBrilliant(move: Position) {
-//   const currentPosition = new Chess(move.after);
+interface SacrificedPieceInfo {
+  piece: PieceSymbol;
+  color: Color;
+  square: Square;
+  value: number;
+  capturedBy: {
+    piece: PieceSymbol;
+    from: Square;
+    value: number;
+  } | null;
+}
 
-//   const turn = currentPosition.turn();
-//   const previousTurn = currentPosition.turn() === "w" ? "b" : "w";
+// Function to find potential sacrifices (higher value pieces that can be captured by lower value pieces)
+function findPotentialSacrifices(chessInstance: Chess): SacrificedPieceInfo[] {
+  const sacrifices: SacrificedPieceInfo[] = [];
+  const currentPlayer = chessInstance.turn(); // Current player's turn
+  const opponentColor = currentPlayer === "w" ? "b" : "w"; // Opponent's color
 
-//   const board = currentPosition.board();
+  // Check each possible opponent move
+  const opponentMoves = chessInstance.moves({ verbose: true });
 
-//   let sacedPieces: SacedPiece[] = [];
+  for (const opponentMove of opponentMoves) {
+    if (opponentMove.captured) {
+      // Get the piece being captured
+      const capturedPiece = chessInstance.get(opponentMove.to);
+      if (!capturedPiece) continue; // Should not happen, but check anyway
 
-//   board.forEach((baordRow) => {
-//     baordRow.forEach((piece) => {
-//       // Check for each square if it holds a piece if it holds a piece also ignore if a pawn is at the square and we want to chck for
-//       if (
-//         !piece ||
-//         piece.type === "p" ||
-//         piece.type == "k" ||
-//         piece.color !== previousTurn
-//       ) {
-//         return;
-//       }
+      const capturedValue = pieceValues[capturedPiece.type];
+      const capturingValue = pieceValues[opponentMove.piece];
 
-//       // If the piece on the square was changed
+      // If the captured piece is of higher value than the capturing piece, it's a sacrifice
+      if (capturedValue > capturingValue) {
+        sacrifices.push({
+          piece: capturedPiece.type,
+          color: capturedPiece.color,
+          square: opponentMove.to,
+          value: capturedValue,
+          capturedBy: {
+            piece: opponentMove.piece,
+            from: opponentMove.from,
+            value: capturingValue,
+          },
+        });
+      }
+    }
+  }
 
-//       // let isHanging = false;
-//       let defendersValue = 0;
-//       let attackersValue = 0;
+  return sacrifices;
+}
 
-//       // If holds then get the defenders and attackers of the square and evaluate their value
-//       const defendersSquares = currentPosition.attackers(piece.square, turn);
-//       const attackersSquares = currentPosition.attackers(
-//         piece.square,
-//         previousTurn
-//       );
+interface BrilliantMoveAnalysis {
+  isBrilliant: boolean;
+}
 
-//       // Use the squares to get the piece and sum the value
-//       defendersSquares.forEach((square) => {
-//         const piece = currentPosition.get(square);
-//         if (piece) {
-//           defendersValue += pieceValues[piece?.type];
-//         }
-//       });
+export function isBrilliantMove(fenBefore: string, moveSan: string): BrilliantMoveAnalysis {
+  const tempChess = new Chess(fenBefore);
+  let moveObject;
 
-//       attackersSquares.forEach((square) => {
-//         const piece = currentPosition.get(square);
-//         if (piece) {
-//           attackersValue += pieceValues[piece?.type];
-//         }
-//       });
+  try {
+    moveObject = tempChess.move(moveSan);
+  } catch (e) {
+    return { isBrilliant: false }; // Invalid move, not brilliant
+  }
 
-//       // Check if the defenders value is greater than the the attackers value then the piece is saced for now
-//       if (defendersValue > attackersValue) {
-//         sacedPieces.push({
-//           piece,
-//           attackersSquares,
-//           defendersSquares,
-//         });
-//       }
-//     });
-//   });
+  const sacrificedPieces = findPotentialSacrifices(tempChess);
+  const isBrilliant = sacrificedPieces.length > 0;
 
-//   //? We need to check for pinned pieces now in the sacked pieces. And do some conclusion based on the final state of the board after takes takes etc..
-//   sacedPieces.forEach((sacedPiece) => {
-//     if (
-//       sacedPiece.attackersSquares &&
-//       sacedPiece.defendersSquares &&
-//       sacedPiece.piece
-//     ) {
-//       const captureTestBoard = new Chess(move.after);
-//       sacedPiece.attackersSquares.forEach((square) => {
-//         const from = square;
-//         const to = sacedPiece.piece?.square;
-
-//         // If to is a promotion square then apply promotions also
-//         if (
-//           sacedPiece.piece?.type === "p" &&
-//           (to?.includes("8") || to?.includes("1"))
-//         ) {
-//           const promotions = ["r", "q", "n", "b"];
-
-//           promotions.forEach((promotion) => {
-//             try {
-//               captureTestBoard.move({ from, to, promotion });
-//             } catch (error) {
-//               return;
-//             }
-
-//             if (captureTestBoard.isCheckmate()) {
-//               return;
-//             }
-
-//             let highestValueLoss = 0;
-//             captureTestBoard.board().forEach((boardRow) => {
-//               boardRow.forEach((capturedPiece) => {
-//                 if (capturedPiece && capturedPiece.color === previousTurn) {
-//                   highestValueLoss = Math.max(
-//                     highestValueLoss,
-//                     pieceValues[capturedPiece.type]
-//                   );
-//                 }
-//               });
-//             });
-
-//             if (
-//               sacedPiece.piece &&
-//               highestValueLoss <= pieceValues[sacedPiece.piece.type]
-//             ) {
-//               return true;
-//             }
-//           });
-//         }
-//       });
-//     }
-//   });
-// }
+  return { isBrilliant };
+}

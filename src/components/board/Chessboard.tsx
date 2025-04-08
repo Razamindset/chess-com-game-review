@@ -227,22 +227,27 @@ export default function Chessboard({
                         className="w-full h-full"
                       />
                     )}
+
                     {lastMove &&
+                      lastMove.classification === "brilliant" &&
+                      lastMove.to === square && (
+                        <img
+                          src={
+                            classificationConfig[lastMove.classification]?.emoji
+                          }
+                          alt={lastMove.classification}
+                          className="absolute animate-brilliant-icon" // Apply animation class
+                        />
+                      )}
+                    {lastMove &&
+                      lastMove.classification !== "brilliant" && // Don't show the normal one if it was brilliant
                       lastMove.classification != "null" &&
                       lastMove.to === square && (
                         <img
                           src={
-                            classificationConfig[
-                              lastMove.classification
-                                ? lastMove.classification
-                                : "null"
-                            ]?.emoji
+                            classificationConfig[lastMove.classification]?.emoji
                           }
-                          alt={
-                            lastMove && lastMove?.to === square
-                              ? lastMove.classification
-                              : "null"
-                          }
+                          alt={lastMove.classification}
                           className="absolute -top-3 right-0 w-7 h-7"
                         />
                       )}

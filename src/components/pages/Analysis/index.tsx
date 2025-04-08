@@ -101,7 +101,10 @@ export default function ChessViewer() {
         // signal,
         cache: "force-cache", // Optional, ensure it's supported
       });
-      return await res.json();
+      const data = await res.json();
+      console.log(data);
+
+      return data;
     } catch (error: any) {
       console.log("Request timed out, using fallback evaluation...");
       // if (error.name === "AbortError") {

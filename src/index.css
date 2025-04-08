@@ -51,3 +51,38 @@ input:checked + .toggle-slider {
 input:checked + .toggle-slider:before {
   transform: translateX(13px);
 }
+
+@keyframes brilliant-appear-and-stay {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes brilliant-move-to-corner {
+  0% {
+    top: 50%;
+    left: 50%;
+    width: auto; /* Or your initial width */
+    height: auto; /* Or your initial height */
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    top: -0.75rem;
+    right: 0;
+    width: 50%;
+    height: 50%;
+    transform: scale(1); /* No extra scaling during the move */
+    opacity: 1;
+  }
+}
+
+.animate-brilliant-icon {
+  position: absolute; /* Important for positioning */
+  animation: brilliant-appear-and-stay 1s ease-out forwards,
+    brilliant-move-to-corner 0.1s linear 2s forwards; /* Start after 2 seconds */
+}

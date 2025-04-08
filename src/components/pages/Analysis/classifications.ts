@@ -1,3 +1,5 @@
+import { isBrilliantMove } from "./brilliant";
+
 export const classifyMove = (
   move: Move,
   currentPositionEval: ApiInitialEval,
@@ -31,22 +33,38 @@ export const classifyMove = (
   const isBookMove = opening?.moveSan.includes(currentPostion.san);
   const accuracy = calculateAccuracy(relativeEvalChange, centipawnChange);
 
+  const brilliantResult = isBrilliantMove(
+    previousPositionEval.fen,
+    currentPostion.san
+  );
+
   if (
     isBookMove &&
     opening?.moveSan &&
     currentIndex < opening?.moveSan?.length
   ) {
-    return {
-      accuracy,
-      classification: "book",
-    };
+    if (brilliantResult.isBrilliant) {
+      return {
+        accuracy,
+        classification: "brilliant",
+      };
+    } else {
+      return {
+        accuracy,
+        classification: "book",
+      };
+    }
   }
 
-  console.log();
-  
   const isBestMove = move.lan === previousPositionEval.move;
 
   if (isBestMove) {
+    if (brilliantResult.isBrilliant) {
+      return {
+        accuracy,
+        classification: "brilliant",
+      };
+    }
     return {
       accuracy,
       classification: "best",
@@ -57,6 +75,12 @@ export const classifyMove = (
     relativeEvalChange <= thresholds.excellent.maxEvalLoss &&
     centipawnChange <= thresholds.excellent.maxCentipawnLoss
   ) {
+    if (brilliantResult.isBrilliant) {
+      return {
+        accuracy,
+        classification: "brilliant",
+      };
+    }
     return {
       accuracy,
       classification: "excellent",
