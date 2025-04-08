@@ -1,4 +1,4 @@
-import { Chess, Piece, Square, Color, PieceSymbol } from "chess.js";
+import { Chess, Square, Color, PieceSymbol } from "chess.js";
 
 export const pieceValues = {
   p: 1,
@@ -24,8 +24,8 @@ interface SacrificedPieceInfo {
 // Function to find potential sacrifices (higher value pieces that can be captured by lower value pieces)
 function findPotentialSacrifices(chessInstance: Chess): SacrificedPieceInfo[] {
   const sacrifices: SacrificedPieceInfo[] = [];
-  const currentPlayer = chessInstance.turn(); // Current player's turn
-  const opponentColor = currentPlayer === "w" ? "b" : "w"; // Opponent's color
+  // const currentPlayer = chessInstance.turn(); // Current player's turn
+  // const opponentColor = currentPlayer === "w" ? "b" : "w"; // Opponent's color
 
   // Check each possible opponent move
   const opponentMoves = chessInstance.moves({ verbose: true });
@@ -63,12 +63,14 @@ interface BrilliantMoveAnalysis {
   isBrilliant: boolean;
 }
 
-export function isBrilliantMove(fenBefore: string, moveSan: string): BrilliantMoveAnalysis {
+export function isBrilliantMove(
+  fenBefore: string,
+  moveSan: string
+): BrilliantMoveAnalysis {
   const tempChess = new Chess(fenBefore);
-  let moveObject;
 
   try {
-    moveObject = tempChess.move(moveSan);
+    tempChess.move(moveSan);
   } catch (e) {
     return { isBrilliant: false }; // Invalid move, not brilliant
   }

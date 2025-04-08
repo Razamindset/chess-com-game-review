@@ -42,12 +42,12 @@ export default function Home() {
       const headers = chess.getHeaders();
       const opening = findOpening(positions);
 
-      const fens = positions.map((move) => {
-        return move.after;
+      // const fens = positions.map((move) => {
+      //   return move.after;
 
         
-      });
-      console.log(positions);
+      // });
+      // console.log(positions);
       
 
       setGameHeaders(headers);
