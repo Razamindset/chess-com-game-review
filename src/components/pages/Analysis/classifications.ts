@@ -1,11 +1,15 @@
 import { isBrilliantMove } from "./brilliant";
+import { Chess } from "chess.js";
+
+// Define type for piece symbols
+type PieceSymbol = "p" | "n" | "b" | "r" | "q" | "k";
 
 export const classifyMove = (
   move: Move,
   currentPositionEval: ApiInitialEval,
   previousPositionEval: ApiInitialEval,
   opening: Opening | null,
-  currentPostion: Position,
+  currentPosition: Position,
   currentIndex: number
 ): ClassificationResponse => {
   if (!currentPositionEval || !previousPositionEval) {
@@ -21,6 +25,26 @@ export const classifyMove = (
     previousPositionEval.eval - currentPositionEval.eval
   );
 
+  // Get actual evaluation values (not absolute)
+  const previousEval = previousPositionEval.eval;
+  const currentEval = currentPositionEval.eval;
+
+  // Check for mate situations
+  const previousMate = previousPositionEval.mate;
+  const currentMate = currentPositionEval.mate;
+
+  // Missing a mate - classify as mistake as per requirement
+  const missedMate =
+    previousMate !== null &&
+    Math.abs(previousMate) <= 5 &&
+    currentMate === null;
+
+  // Calculate if player is still winning by a substantial margin
+  // Positive eval means the player is winning
+  const isStillWinningByLot = currentEval >= 3.0; // Still up by 3+ pawns
+  const isLosingButStillWinning =
+    previousEval > currentEval && isStillWinningByLot;
+
   // Classification thresholds
   const thresholds = {
     bestMove: { exactMatch: 0.05, maxEvalLoss: 0.2 },
@@ -30,41 +54,52 @@ export const classifyMove = (
     mistake: { maxEvalLoss: 3.0, maxCentipawnLoss: 300 },
   };
 
-  const isBookMove = opening?.moveSan.includes(currentPostion.san);
+  const isBookMove = opening?.moveSan?.includes(currentPosition.san);
   const accuracy = calculateAccuracy(relativeEvalChange, centipawnChange);
 
-  const brilliantResult = isBrilliantMove(
+  // Check if the last move was just an equal material trade
+  const wasEqualTrade = checkForEqualTrade(
     previousPositionEval.fen,
-    currentPostion.san
+    currentPosition.san
   );
 
-  if (
-    isBookMove &&
-    opening?.moveSan &&
-    currentIndex < opening?.moveSan?.length
-  ) {
-    if (brilliantResult.isBrilliant) {
-      return {
-        accuracy,
-        classification: "brilliant",
-      };
-    } else {
-      return {
-        accuracy,
-        classification: "book",
-      };
-    }
-  }
+  // Get brilliant move analysis
+  const brilliantResult = isBrilliantMove(
+    previousPositionEval.fen,
+    currentPosition.san
+  );
 
+  // Check if it's the best move according to the engine
   const isBestMove = move.lan === previousPositionEval.move;
 
+  // Check if it's an excellent move based on evaluation metrics
+  const isExcellentMove =
+    relativeEvalChange <= thresholds.excellent.maxEvalLoss &&
+    centipawnChange <= thresholds.excellent.maxCentipawnLoss;
+
+  // A brilliant move must be at least excellent or best, and not an equal trade
+  const isTrulyBrilliant =
+    brilliantResult.isBrilliant &&
+    !wasEqualTrade &&
+    (isBestMove || isExcellentMove);
+
+  // Missing a mate is always a mistake
+  if (missedMate) {
+    return {
+      accuracy: Math.min(accuracy, 50), // Lower accuracy for missed mate
+      classification: "mistake",
+    };
+  }
+
+  // Priority order: Brilliant > Best > Book > Other classifications
+  if (isTrulyBrilliant) {
+    return {
+      accuracy,
+      classification: "brilliant",
+    };
+  }
+
   if (isBestMove) {
-    if (brilliantResult.isBrilliant) {
-      return {
-        accuracy,
-        classification: "brilliant",
-      };
-    }
     return {
       accuracy,
       classification: "best",
@@ -72,15 +107,18 @@ export const classifyMove = (
   }
 
   if (
-    relativeEvalChange <= thresholds.excellent.maxEvalLoss &&
-    centipawnChange <= thresholds.excellent.maxCentipawnLoss
+    isBookMove &&
+    opening?.moveSan &&
+    currentIndex < opening?.moveSan?.length
   ) {
-    if (brilliantResult.isBrilliant) {
-      return {
-        accuracy,
-        classification: "brilliant",
-      };
-    }
+    return {
+      accuracy,
+      classification: "book",
+    };
+  }
+
+  // Handle regular move classifications
+  if (isExcellentMove) {
     return {
       accuracy,
       classification: "excellent",
@@ -108,18 +146,29 @@ export const classifyMove = (
   }
 
   if (
-    relativeEvalChange <= thresholds.mistake.maxEvalLoss &&
-    centipawnChange <= thresholds.mistake.maxCentipawnLoss
+    (relativeEvalChange <= thresholds.mistake.maxEvalLoss &&
+      centipawnChange <= thresholds.mistake.maxCentipawnLoss) ||
+    isLosingButStillWinning
   ) {
     return {
       accuracy,
       classification: "mistake",
     };
   }
+
   if (currentPositionEval.error) {
     return {
       accuracy: 80,
       classification: "null",
+    };
+  }
+
+  // Don't classify as blunder if player is still winning by a substantial margin
+  if (isLosingButStillWinning) {
+    // Downgrade to mistake if still winning by a lot
+    return {
+      accuracy,
+      classification: "mistake",
     };
   }
 
@@ -128,6 +177,56 @@ export const classifyMove = (
     classification: "blunder",
   };
 };
+
+/**
+ * Checks if the move was just an equal trade of material
+ * @param fenBefore Position before the move
+ * @param moveSan The move in SAN notation
+ * @returns boolean indicating if it was an equal material trade
+ */
+function checkForEqualTrade(fenBefore: string, moveSan: string): boolean {
+  const chess = new Chess(fenBefore);
+
+  // Make the move
+  try {
+    chess.move(moveSan);
+  } catch (e) {
+    return false; // Invalid move
+  }
+
+  // Get the move details from the history
+  const moveHistory = chess.history({ verbose: true });
+  const lastMove = moveHistory[moveHistory.length - 1];
+
+  // If there was no capture, it's not a trade
+  if (!lastMove.captured) {
+    return false;
+  }
+
+  // Get values of the captured and capturing pieces
+  const capturedPieceValue = getPieceValue(lastMove.captured as PieceSymbol);
+  const capturingPieceValue = getPieceValue(lastMove.piece as PieceSymbol);
+
+  // Check if the trade was approximately equal
+  // We can define "equal" as difference within 1 pawn value
+  return Math.abs(capturedPieceValue - capturingPieceValue) <= 1;
+}
+
+/**
+ * Returns the standard value of a chess piece
+ */
+function getPieceValue(pieceType: PieceSymbol): number {
+  const values: Record<PieceSymbol, number> = {
+    p: 1, // pawn
+    n: 3, // knight
+    b: 3, // bishop
+    r: 5, // rook
+    q: 9, // queen
+    k: 0, // king (not typically assigned a value in trades)
+  };
+
+  return values[pieceType] || 0;
+}
 
 export function calculateAccuracy(
   relativeEvalChange: number,
